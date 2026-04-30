@@ -351,7 +351,13 @@ function orderGenerator() {
 
         downloadReceipt() {
             const canvas = document.getElementById('receipt-canvas');
-            html2canvas(canvas, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvasElement => {
+            html2canvas(canvas, { 
+    scale: 3, // High DPI
+    useCORS: true, 
+    backgroundColor: "#ffffff",
+    letterRendering: true, // This helps keep text inside the boxes
+    windowWidth: 800 // Forces the canvas to think it is 800px regardless of your browser size
+}).then(canvasElement => {
                 const link = document.createElement('a');
                 link.download = `Multi_Order_${this.customerName.replace(/\s+/g, '_')}.png`;
                 link.href = canvasElement.toDataURL('image/png');
