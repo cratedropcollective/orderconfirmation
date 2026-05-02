@@ -6,6 +6,7 @@
     <title>Crate Drop Collective | Pre-orders</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         [x-cloak] { display: none !important; }
@@ -136,151 +137,92 @@
         </div>
     </section>
 
-    <div x-data="orderGenerator()" class="bg-gray-100 min-h-screen p-4 md:p-10 font-sans">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 self-start">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-black uppercase tracking-tighter">Order Slip Generator</h2>
-                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold uppercase" x-text="orderItems.length + ' Items Added'"></span>
-            </div>
+    <script>
+    function orderGenerator() {
+        return {
+            inventory: [],
+            orderItems: [],
+            customerName: '',
+            orderDate: new Date().toLocaleDateString('en-PH'),
+            tempItem: { id: 0, qty: 1, isCase: false },
             
-            <div class="space-y-6">
-                <div class="grid grid-cols-2 gap-4 border-b pb-6">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Customer Name</label>
-                        <input type="text" x-model="customerName" class="w-full p-2 bg-gray-50 border rounded-lg text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Order Date</label>
-                        <input type="text" x-model="orderDate" class="w-full p-2 bg-gray-50 border rounded-lg text-sm font-bold">
-                    </div>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
-                    <h3 class="text-[10px] font-black uppercase text-blue-800">Add New Item</h3>
-                    <div>
-                        <select x-model.number="tempItem.id" @change="syncTempItem" class="w-full p-2 bg-white border rounded-lg text-sm font-bold">
-                            <option value="0">-- Select Product --</option>
-                            <template x-for="item in inventory" :key="item.id">
-                                <option :value="item.id" x-text="item.name"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="block text-[8px] font-bold uppercase text-gray-400">Qty</label>
-                            <input type="number" x-model.number="tempItem.qty" class="w-full p-2 bg-white border rounded-lg text-xs font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-[8px] font-bold uppercase text-gray-400">Format</label>
-                            <select x-model="tempItem.isCase" class="w-full p-2 bg-white border rounded-lg text-xs font-bold">
-                                <option :value="false">Unit</option>
-                                <option :value="true">Case</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button @click="addItem" :disabled="tempItem.id == 0" class="w-full bg-blue-600 text-white text-[10px] font-black py-2.5 rounded-lg uppercase tracking-wider hover:bg-blue-700 disabled:bg-gray-300 transition-all">
-                                Add to List
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <template x-for="(item, index) in orderItems" :key="index">
-                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div class="flex-1">
-                                <p class="text-xs font-black uppercase" x-text="item.name"></p>
-                                <p class="text-[9px] text-gray-500 uppercase"><span x-text="item.qty"></span>x <span x-text="item.isCase ? 'Case' : 'Unit'"></span> | ₱<span x-text="item.price.toLocaleString()"></span></p>
-                            </div>
-                            <button @click="removeItem(index)" class="text-red-500 hover:text-red-700 px-2">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                            </button>
-                        </div>
-                    </template>
-                </div>
-
-                <button @click="downloadReceipt" :disabled="orderItems.length == 0" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl uppercase tracking-widest hover:bg-blue-600 transition-all mt-4 shadow-lg disabled:opacity-50">
-                    <i class="fas fa-file-download mr-2"></i> Download Confirmation (PNG)
-                </button>
-            </div>
-        </div>
-
-        <div id="receipt-canvas" class="bg-white shadow-2xl mx-auto overflow-hidden border border-gray-100" style="width: 800px; min-height: 700px;">
-            <div class="p-10 border-b-2 border-gray-50">
-    <div class="flex items-center justify-center space-x-6">
-        <div class="flex flex-col items-center border-r-2 border-gray-100 pr-8">
-                <span class="text-4xl font-black tracking-tighter leading-none text-slate-900">CRATE DROP</span>
-                <span class="block text-[15px] font-bold text-blue-500 tracking-[0.4em] uppercase -mt-1">COLLECTIVE</span>
-            </div>
-        
-        <div class="text-left">
-            <h1 class="text-3xl font-black text-blue-800 italic tracking-tighter uppercase leading-none">
-                Order <br> Confirmation
-            </h1>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-blue-700 text-white px-10 py-3 flex justify-between font-bold text-xs uppercase tracking-widest">
-                <span>Customer: <span x-text="customerName" class="ml-2 font-black border-b border-white/40"></span></span>
-                <span>Date: <span x-text="orderDate"></span>
-            </div>
-
-            <div class="mx-10 mt-8">
-                <div class="grid grid-cols-12 gap-2 text-blue-800 font-black text-[11px] uppercase border-b-4 border-blue-800 pb-3">
-                    <div class="col-span-1">Qty.</div>
-                    <div class="col-span-2">Format</div>
-                    <div class="col-span-5">Product Name</div>
-                    <div class="col-span-2 text-right">Price per Unit</div>
-                    <div class="col-span-2 text-right">Subtotal</div>
-                </div>
-
-                <template x-for="(item, index) in orderItems" :key="index">
-                    <div class="grid grid-cols-12 gap-2 text-slate-800 font-bold text-[11px] py-4 border-b border-gray-100 items-center">
-                        <div class="col-span-1 font-black text-lg" x-text="item.qty"></div>
-                        <div class="col-span-2 uppercase text-[9px] text-blue-600" x-text="item.isCase ? 'Full Case' : 'Unit'"></div>
-                        <div class="col-span-5 uppercase leading-tight">
-                            <span x-text="item.name"></span>
-                            <div class="text-[8px] text-gray-400 mt-1" x-text="'ETA: ' + item.eta"></div>
-                        </div>
-                        <div class="col-span-2 text-right">₱<span x-text="item.price.toLocaleString()"></span></div>
-                        <div class="col-span-2 text-right font-black">₱<span x-text="(item.price * item.qty).toLocaleString()"></span></div>
-                    </div>
-                </template>
-            </div>
-
-            <div class="mx-10 flex flex-col items-end space-y-4 mt-8">
-                <div class="w-full max-w-[350px]">
-                    <div class="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-2 px-2">
-                        <span>Total Combined Order:</span>
-                        <span>₱<span x-text="fullOrderTotal.toLocaleString()"></span></span>
-                    </div>
-                    
-                    <div class="bg-blue-700 text-white text-center py-2 font-black text-[11px] uppercase tracking-widest">Total DP Paid (30%)</div>
-                    <div class="text-center font-black text-4xl text-slate-900 py-3 border-x border-b border-gray-100 shadow-sm">
-                        ₱<span x-text="totalDP.toLocaleString()"></span>
-                    </div>
-                </div>
+            // 1. Fetch data from your TSV
+            async init() {
+                const sheetId = 'YOUR_GOOGLE_SHEET_ID'; // Replace with your Sheet ID
+                const tsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=tsv`;
                 
-                <div class="w-full max-w-[350px]">
-                    <div class="bg-slate-800 text-white text-center py-1.5 font-black text-[10px] uppercase tracking-widest">Combined Balance Remaining</div>
-                    <div class="text-center font-black text-2xl text-slate-700 py-2 border-x border-b border-gray-100 shadow-sm">
-                        ₱<span x-text="totalBalance.toLocaleString()"></span>
-                    </div>
-                </div>
-            </div>
+                try {
+                    const response = await fetch(tsvUrl);
+                    const text = await response.text();
+                    const rows = text.split('\n').slice(1); // Skip header row
+                    
+                    this.inventory = rows.map((row, index) => {
+                        const cols = row.split('\t');
+                        return {
+                            id: index + 1,
+                            name: cols[0],       // Product Name
+                            unitPrice: parseFloat(cols[1]) || 0,
+                            casePrice: parseFloat(cols[2]) || 0,
+                            eta: cols[3] || 'TBA'
+                        };
+                    });
+                } catch (err) {
+                    console.error("Failed to load inventory:", err);
+                }
+            },
 
-            <div class="px-16 py-12 text-[10px] text-gray-400 text-center leading-relaxed font-semibold italic">
-                By placing a pre-order, you confirm that you have understood all the information provided below, including the risks associated with your order. You also acknowledge and accept the possibility of pre-order country allocation cuts or reduction.
-Please note that we are here to assist you in good faith to obtain the item at the pre-order price.
-It is implied that if allocations are better or complete, the pre-order customer must complete their payment within 3 days once the allocation is confirmed, near the product's release date. Cancellations are not allowed, and the 30% pre-order deposit will be forfeited if the payment cannot be made due to any circumstances.
-            </div>
-        </div>
-    </div>
-</div>
+            // 2. Sync selected product details to tempItem
+            syncTempItem() {
+                const selected = this.inventory.find(i => i.id === this.tempItem.id);
+                if (selected) {
+                    this.tempItem.name = selected.name;
+                    this.tempItem.eta = selected.eta;
+                    this.tempItem.unitPrice = selected.unitPrice;
+                    this.tempItem.casePrice = selected.casePrice;
+                }
+            },
+
+            // 3. Logic to add item to the confirmation list
+            addItem() {
+                const price = this.tempItem.isCase ? this.tempItem.casePrice : this.tempItem.unitPrice;
+                this.orderItems.push({
+                    name: this.tempItem.name,
+                    qty: this.tempItem.qty,
+                    isCase: this.tempItem.isCase,
+                    price: price,
+                    eta: this.tempItem.eta
+                });
+                // Reset temp item
+                this.tempItem = { id: 0, qty: 1, isCase: false };
+            },
+
+            removeItem(index) {
+                this.orderItems.splice(index, 1);
+            },
+
+            // Computed Totals
+            get fullOrderTotal() {
+                return this.orderItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            },
+            get totalDP() {
+                return this.fullOrderTotal * 0.3; // 30% Downpayment
+            },
+            get totalBalance() {
+                return this.fullOrderTotal - this.totalDP;
+            },
+
+            // PNG Export logic
+            async downloadReceipt() {
+                const element = document.getElementById('receipt-canvas');
+                const canvas = await html2canvas(element, { scale: 2 });
+                const link = document.createElement('a');
+                link.download = `CrateDrop-Order-${this.customerName || 'Customer'}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+    }
+</script>
 
     <!-- Product Grid -->
     <main class="container mx-auto py-6 px-2 md:px-4">
