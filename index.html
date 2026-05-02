@@ -3,323 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crate Drop | Order Generator</title>
-    <!-- Essential Libraries -->
+    <title>Crate Drop Order Generator</title>
+    <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 antialiased" x-data="orderGenerator()">
+<body>
 
-    <!-- Main Container -->
-    <div class="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div x-data="orderGenerator()" class="bg-gray-100 min-h-screen p-4 md:p-10 font-sans">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        <!-- LEFT PANEL: Controls (5 columns) -->
-        <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-8">
-            <h2 class="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-6 flex justify-between items-center">
-                Order Tool
-                <span class="text-xs bg-slate-900 text-white px-3 py-1 rounded-full" x-text="inventory.length > 0 ? 'Data Loaded' : 'Loading...'"></span>
-            </h2>
-
+        <!-- Left Side: Form -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 self-start">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black uppercase tracking-tighter">Order Slip Generator</h2>
+                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold uppercase" x-text="orderItems.length + ' Items Added'"></span>
+            </div>
+            
             <div class="space-y-6">
-                <!-- Customer Details -->
-                <div class="grid grid-cols-2 gap-3 border-b border-slate-100 pb-6">
+                <div class="grid grid-cols-2 gap-4 border-b pb-6">
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Customer Name</label>
-                        <input type="text" x-model="customerName" placeholder="Juan Dela Cruz" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Customer Name</label>
+                        <input type="text" x-model="customerName" class="w-full p-2 bg-gray-50 border rounded-lg text-sm font-bold">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Date</label>
-                        <input type="text" x-model="orderDate" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-500 transition-colors">
+                        <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Order Date</label>
+                        <input type="text" x-model="orderDate" class="w-full p-2 bg-gray-50 border rounded-lg text-sm font-bold">
                     </div>
                 </div>
 
-                <!-- Product Selection Box -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
+                    <h3 class="text-[10px] font-black uppercase text-blue-800">Add New Item</h3>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Select Product</label>
-                        <select x-model.number="tempItem.id" @change="syncTempItem" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-500">
-                            <option value="0">-- Choose from Inventory --</option>
+                        <select x-model.number="tempItem.id" @change="syncTempItem" class="w-full p-2 bg-white border rounded-lg text-sm font-bold">
+                            <option value="0">-- Select Product --</option>
                             <template x-for="item in inventory" :key="item.id">
                                 <option :value="item.id" x-text="item.name"></option>
                             </template>
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Qty</label>
-                            <input type="number" min="1" x-model.number="tempItem.qty" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-500">
+                            <label class="block text-[8px] font-bold uppercase text-gray-400">Qty</label>
+                            <input type="number" x-model.number="tempItem.qty" class="w-full p-2 bg-white border rounded-lg text-xs font-bold">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Format</label>
-                            <select x-model="tempItem.isCase" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:border-blue-500">
+                            <label class="block text-[8px] font-bold uppercase text-gray-400">Format</label>
+                            <select x-model="tempItem.isCase" class="w-full p-2 bg-white border rounded-lg text-xs font-bold">
                                 <option :value="false">Unit</option>
                                 <option :value="true">Case</option>
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button @click="addItem" :disabled="tempItem.id === 0" class="w-full bg-blue-600 text-white text-xs font-black py-3 rounded-lg uppercase tracking-wider hover:bg-blue-700 disabled:bg-slate-300 transition-all">
-                                Add
+                            <button @click="addItem" :disabled="tempItem.id == 0" class="w-full bg-blue-600 text-white text-[10px] font-black py-2.5 rounded-lg uppercase tracking-wider hover:bg-blue-700 disabled:bg-gray-300 transition-all">
+                                Add to List
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Active Order List -->
-                <div class="min-h-[150px] max-h-[300px] overflow-y-auto space-y-2 pr-2">
-                    <template x-if="orderItems.length === 0">
-                        <div class="text-center text-slate-400 text-xs py-10 font-bold uppercase">No items added yet</div>
-                    </template>
+                <div class="space-y-2">
                     <template x-for="(item, index) in orderItems" :key="index">
-                        <div class="flex justify-between items-center p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="flex-1">
-                                <p class="text-xs font-black text-slate-800 uppercase leading-tight" x-text="item.name"></p>
-                                <p class="text-[10px] text-slate-500 font-bold mt-0.5">
-                                    <span x-text="item.qty"></span>x <span x-text="item.isCase ? 'CASE' : 'UNIT'" class="text-blue-600"></span> | ₱<span x-text="item.price.toLocaleString()"></span>
-                                </p>
+                                <p class="text-xs font-black uppercase" x-text="item.name"></p>
+                                <p class="text-[9px] text-gray-500 uppercase"><span x-text="item.qty"></span>x <span x-text="item.isCase ? 'Case' : 'Unit'"></span> | ₱<span x-text="item.price.toLocaleString()"></span></p>
                             </div>
-                            <button @click="removeItem(index)" class="text-red-400 hover:text-red-600 px-3 py-1 transition-colors">
-                                <i class="fas fa-times text-lg"></i>
+                            <button @click="removeItem(index)" class="text-red-500 hover:text-red-700 px-2">
+                                <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
                     </template>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
-                    <button @click="downloadReceipt" :disabled="orderItems.length === 0" class="bg-slate-900 text-white font-black py-4 rounded-xl uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md disabled:opacity-50 text-[10px] flex justify-center items-center">
-                        <i class="fas fa-image mr-2 text-sm"></i> Save PNG
-                    </button>
-                    <button @click="confirmAndRedirect" :disabled="orderItems.length === 0" class="bg-[#0084FF] text-white font-black py-4 rounded-xl uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md disabled:opacity-50 text-[10px] flex justify-center items-center">
-                        <i class="fab fa-facebook-messenger mr-2 text-sm"></i> Send to FB
-                    </button>
-                </div>
+                <button @click="downloadReceipt" :disabled="orderItems.length == 0" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl uppercase tracking-widest hover:bg-blue-600 transition-all mt-4 shadow-lg disabled:opacity-50">
+                    <i class="fas fa-file-download mr-2"></i> Download Confirmation (PNG)
+                </button>
+                
+                <button @click="confirmAndRedirect" :disabled="orderItems.length == 0" class="w-full bg-blue-500 text-white font-black py-4 rounded-xl uppercase tracking-widest hover:bg-blue-700 transition-all mt-2 shadow-lg disabled:opacity-50">
+                    <i class="fab fa-facebook-messenger mr-2"></i> Send Order via Messenger
+                </button>
             </div>
         </div>
 
-        <!-- RIGHT PANEL: The Receipt Output (7 columns) -->
-        <div class="lg:col-span-7 flex justify-center overflow-x-auto pb-10">
-            <!-- Canvas target for html2canvas -->
-            <div id="receipt-canvas" class="bg-white shadow-xl border border-slate-200 shrink-0" style="width: 750px; min-height: 800px; display: flex; flex-direction: column;">
-                
-                <!-- Receipt Header -->
-                <div class="p-10 pb-8 border-b border-slate-100">
-                    <div class="flex items-center justify-between">
-                        <div class="flex flex-col">
-                            <span class="text-5xl font-black tracking-tighter leading-none text-slate-900">CRATE DROP</span>
-                            <span class="block text-sm font-black text-blue-600 tracking-[0.4em] uppercase mt-1">COLLECTIVE</span>
-                        </div>
-                        <div class="text-right">
-                            <h1 class="text-3xl font-black text-slate-300 italic tracking-tighter uppercase leading-none">ORDER<br>SLIP</h1>
-                        </div>
+        <!-- Right Side: Receipt Canvas -->
+        <div id="receipt-canvas" class="bg-white shadow-2xl mx-auto overflow-hidden border border-gray-100" style="width: 800px; min-height: 700px;">
+            <div class="p-10 border-b-2 border-gray-50">
+                <div class="flex items-center justify-center space-x-6">
+                    <div class="flex flex-col items-center border-r-2 border-gray-100 pr-8">
+                        <span class="text-4xl font-black tracking-tighter leading-none text-slate-900">CRATE DROP</span>
+                        <span class="block text-[15px] font-bold text-blue-500 tracking-[0.4em] uppercase -mt-1">COLLECTIVE</span>
+                    </div>
+                    <div class="text-left">
+                        <h1 class="text-3xl font-black text-blue-800 italic tracking-tighter uppercase leading-none">
+                            Order <br> Confirmation
+                        </h1>
                     </div>
                 </div>
+            </div>
 
-                <!-- Customer Meta -->
-                <div class="bg-slate-900 text-white px-10 py-3 flex justify-between font-bold text-[10px] uppercase tracking-widest">
-                    <span>Client: <span x-text="customerName || '------------------'" class="ml-2 font-black text-blue-300"></span></span>
-                    <span>Date: <span x-text="orderDate"></span></span>
+            <div class="bg-blue-700 text-white px-10 py-3 flex justify-between font-bold text-xs uppercase tracking-widest">
+                <span>Customer: <span x-text="customerName" class="ml-2 font-black border-b border-white/40"></span></span>
+                <span>Date: <span x-text="orderDate"></span></span>
+            </div>
+
+            <div class="mx-10 mt-8">
+                <div class="grid grid-cols-12 gap-2 text-blue-800 font-black text-[11px] uppercase border-b-4 border-blue-800 pb-3">
+                    <div class="col-span-1">Qty.</div>
+                    <div class="col-span-2">Format</div>
+                    <div class="col-span-5">Product Name</div>
+                    <div class="col-span-2 text-right">Price per Unit</div>
+                    <div class="col-span-2 text-right">Subtotal</div>
                 </div>
 
-                <!-- Receipt Body (Expands to push footer down) -->
-                <div class="mx-10 mt-8 flex-grow">
-                    <!-- Table Header -->
-                    <div class="grid grid-cols-12 gap-2 text-slate-400 font-black text-[10px] uppercase border-b-2 border-slate-900 pb-2 mb-2">
-                        <div class="col-span-1 text-center">Qty</div>
-                        <div class="col-span-2">Format</div>
-                        <div class="col-span-5">Item Description</div>
-                        <div class="col-span-2 text-right">Price</div>
-                        <div class="col-span-2 text-right">Amount</div>
+                <template x-for="(item, index) in orderItems" :key="index">
+                    <div class="grid grid-cols-12 gap-2 text-slate-800 font-bold text-[11px] py-4 border-b border-gray-100 items-center">
+                        <div class="col-span-1 font-black text-lg" x-text="item.qty"></div>
+                        <div class="col-span-2 uppercase text-[9px] text-blue-600" x-text="item.isCase ? 'Full Case' : 'Unit'"></div>
+                        <div class="col-span-5 uppercase leading-tight">
+                            <span x-text="item.name"></span>
+                            <div class="text-[8px] text-gray-400 mt-1" x-text="'ETA: ' + item.eta"></div>
+                        </div>
+                        <div class="col-span-2 text-right">₱<span x-text="item.price.toLocaleString()"></span></div>
+                        <div class="col-span-2 text-right font-black">₱<span x-text="(item.price * item.qty).toLocaleString()"></span></div>
                     </div>
+                </template>
+            </div>
 
-                    <!-- Table Rows -->
-                    <template x-for="(item, index) in orderItems" :key="index">
-                        <div class="grid grid-cols-12 gap-2 text-slate-800 font-bold text-[11px] py-4 border-b border-slate-100 items-center">
-                            <div class="col-span-1 text-center font-black text-base" x-text="item.qty"></div>
-                            <div class="col-span-2 uppercase text-[9px] text-blue-600 font-black" x-text="item.isCase ? 'CASE' : 'UNIT'"></div>
-                            <div class="col-span-5 uppercase leading-tight">
-                                <span x-text="item.name" class="font-black text-slate-900"></span>
-                                <div class="text-[9px] text-slate-400 mt-1 font-bold" x-text="'ETA: ' + item.eta"></div>
-                            </div>
-                            <div class="col-span-2 text-right text-slate-500">₱<span x-text="item.price.toLocaleString()"></span></div>
-                            <div class="col-span-2 text-right font-black text-slate-900 text-sm">₱<span x-text="(item.price * item.qty).toLocaleString()"></span></div>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Receipt Totals -->
-                <div class="mx-10 mt-8 mb-10 flex flex-col items-end space-y-4">
-                    <div class="w-full max-w-[380px]">
-                        <div class="flex justify-between text-[11px] font-black text-slate-400 uppercase mb-2 px-2">
-                            <span>Gross Total:</span>
-                            <span>₱<span x-text="fullOrderTotal.toLocaleString()"></span></span>
-                        </div>
-                        
-                        <div class="flex bg-blue-50 border border-blue-100 rounded-t-lg overflow-hidden mt-4">
-                            <div class="w-1/2 bg-blue-600 text-white p-3 flex items-center justify-center font-black text-[10px] uppercase tracking-widest text-center leading-tight">
-                                Required DP<br>(30%)
-                            </div>
-                            <div class="w-1/2 p-3 flex items-center justify-center font-black text-2xl text-slate-900">
-                                ₱<span x-text="totalDP.toLocaleString()"></span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex border-x border-b border-slate-200 rounded-b-lg overflow-hidden bg-white">
-                            <div class="w-1/2 bg-slate-100 text-slate-500 p-3 flex items-center justify-center font-black text-[10px] uppercase tracking-widest text-center leading-tight">
-                                Remaining<br>Balance
-                            </div>
-                            <div class="w-1/2 p-3 flex items-center justify-center font-black text-xl text-slate-700">
-                                ₱<span x-text="totalBalance.toLocaleString()"></span>
-                            </div>
-                        </div>
+            <div class="mx-10 flex flex-col items-end space-y-4 mt-8">
+                <div class="w-full max-w-[350px]">
+                    <div class="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-2 px-2">
+                        <span>Total Combined Order:</span>
+                        <span>₱<span x-text="fullOrderTotal.toLocaleString()"></span></span>
                     </div>
-                </div>
-
-                <!-- Receipt Footer / Disclaimer -->
-                <div class="mt-auto px-12 py-8 bg-slate-50 border-t border-slate-200">
-                    <p class="text-[9px] text-slate-400 text-center leading-relaxed font-bold uppercase tracking-wide">
-                        Allocations are subject to distributor cuts. Balances must be settled within 3 days of allocation confirmation prior to release. Deposits are non-refundable for buyer cancellations.
-                    </p>
+                    
+                    <div class="bg-blue-700 text-white text-center py-2 font-black text-[11px] uppercase tracking-widest">Total DP Paid (30%)</div>
+                    <div class="text-center font-black text-4xl text-slate-900 py-3 border-x border-b border-gray-100 shadow-sm">
+                        ₱<span x-text="totalDP.toLocaleString()"></span>
+                    </div>
                 </div>
                 
+                <div class="w-full max-w-[350px]">
+                    <div class="bg-slate-800 text-white text-center py-1.5 font-black text-[10px] uppercase tracking-widest">Combined Balance Remaining</div>
+                    <div class="text-center font-black text-2xl text-slate-700 py-2 border-x border-b border-gray-100 shadow-sm">
+                        ₱<span x-text="totalBalance.toLocaleString()"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-16 py-12 text-[10px] text-gray-400 text-center leading-relaxed font-semibold italic">
+                By placing a pre-order, you confirm that you have understood all the information provided below, including the risks associated with your order. You also acknowledge and accept the possibility of pre-order country allocation cuts or reduction.
+                Please note that we are here to assist you in good faith to obtain the item at the pre-order price.
+                It is implied that if allocations are better or complete, the pre-order customer must complete their payment within 3 days once the allocation is confirmed, near the product's release date. Cancellations are not allowed, and the 30% pre-order deposit will be forfeited if the payment cannot be made due to any circumstances.
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Alpine.js Application Logic -->
-    <script>
-        function orderGenerator() {
-            return {
-                inventory: [],
-                orderItems: [],
-                customerName: '',
-                orderDate: new Date().toLocaleDateString('en-PH'),
-                tempItem: { id: 0, qty: 1, isCase: false, name: '', eta: '', unitPrice: 0, casePrice: 0 },
+<script>
+    function orderGenerator() {
+        return {
+            inventory: [],
+            orderItems: [],
+            customerName: '',
+            orderDate: new Date().toLocaleDateString('en-PH'),
+            tempItem: { id: 0, qty: 1, isCase: false, name: '', eta: '', unitPrice: 0, casePrice: 0 },
+            
+            // Fetch directly from your TSV link
+            async init() {
+                const tsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQBLjsB__nTteTD8pPY7wvfQEQUCqLstkfUb8lgfOV_NpVwraiUU07VxZrKyWsmVPE1vyLtv_6ED9Y/pub?gid=0&single=true&output=tsv";
                 
-                async init() {
-                    // Your exact provided TSV URL
-                    const tsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQBLjsB__nTteTD8pPY7wvfQEQUCqLstkfUb8lgfOV_NpVwraiUU07VxZrKyWsmVPE1vyLtv_6ED9Y/pub?gid=0&single=true&output=tsv";
+                try {
+                    const response = await fetch(tsvUrl);
+                    const text = await response.text();
                     
-                    try {
-                        const response = await fetch(tsvUrl);
-                        if (!response.ok) throw new Error("Network response was not ok");
-                        const text = await response.text();
-                        
-                        // Parse TSV (skipping the first header row)
-                        const rows = text.trim().split('\n').slice(1); 
-                        
-                        this.inventory = rows.map((row, index) => {
-                            const cols = row.split('\t');
-                            // IMPORTANT: Adjust these indices if your TSV columns are in a different order!
-                            // Assumes: Col 1 = Name, Col 2 = Unit Price, Col 3 = Case Price, Col 4 = ETA
-                            return {
-                                id: index + 1,
-                                name: cols[0] ? cols[0].trim() : 'Unknown Item',
-                                unitPrice: parseFloat(cols[1] ? cols[1].replace(/,/g, '') : 0) || 0,
-                                casePrice: parseFloat(cols[2] ? cols[2].replace(/,/g, '') : 0) || 0,
-                                eta: cols[3] ? cols[3].trim() : 'TBA'
-                            };
-                        }).filter(item => item.name !== 'Unknown Item'); // Filter out empty rows
-                        
-                    } catch (err) {
-                        console.error("Failed to load inventory from TSV:", err);
-                        alert("Could not load Google Sheet data. Ensure the link is correct and published to the web.");
-                    }
-                },
-
-                syncTempItem() {
-                    const selected = this.inventory.find(i => i.id === this.tempItem.id);
-                    if (selected) {
-                        this.tempItem.name = selected.name;
-                        this.tempItem.eta = selected.eta;
-                        this.tempItem.unitPrice = selected.unitPrice;
-                        this.tempItem.casePrice = selected.casePrice;
-                    }
-                },
-
-                addItem() {
-                    if (this.tempItem.id === 0) return;
+                    // Skip header row and parse
+                    const rows = text.trim().split('\n').slice(1); 
                     
-                    const selectedPrice = this.tempItem.isCase ? this.tempItem.casePrice : this.tempItem.unitPrice;
-                    this.orderItems.push({
-                        name: this.tempItem.name,
-                        qty: this.tempItem.qty,
-                        isCase: this.tempItem.isCase,
-                        price: selectedPrice,
-                        eta: this.tempItem.eta
-                    });
-                    
-                    // Reset inputs
-                    this.tempItem.id = 0;
-                    this.tempItem.qty = 1;
-                    this.tempItem.isCase = false;
-                },
+                    this.inventory = rows.map((row, index) => {
+                        const cols = row.split('\t');
+                        return {
+                            id: index + 1,
+                            name: cols[0] ? cols[0].trim() : 'Unknown Item',
+                            unitPrice: parseFloat(cols[1] ? cols[1].replace(/,/g, '') : 0) || 0,
+                            casePrice: parseFloat(cols[2] ? cols[2].replace(/,/g, '') : 0) || 0,
+                            eta: cols[3] ? cols[3].trim() : 'TBA'
+                        };
+                    }).filter(item => item.name !== 'Unknown Item'); // Ignore empty rows
+                } catch (err) {
+                    console.error("Failed to load inventory:", err);
+                }
+            },
 
-                removeItem(index) {
-                    this.orderItems.splice(index, 1);
-                },
+            syncTempItem() {
+                const selected = this.inventory.find(i => i.id === this.tempItem.id);
+                if (selected) {
+                    this.tempItem.name = selected.name;
+                    this.tempItem.eta = selected.eta;
+                    this.tempItem.unitPrice = selected.unitPrice;
+                    this.tempItem.casePrice = selected.casePrice;
+                }
+            },
 
-                // Math Computations
-                get fullOrderTotal() {
-                    return this.orderItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
-                },
-                get totalDP() {
-                    return Math.ceil(this.fullOrderTotal * 0.3); // 30% calculation
-                },
-                get totalBalance() {
-                    return this.fullOrderTotal - this.totalDP;
-                },
+            addItem() {
+                const price = this.tempItem.isCase ? this.tempItem.casePrice : this.tempItem.unitPrice;
+                this.orderItems.push({
+                    name: this.tempItem.name,
+                    qty: this.tempItem.qty,
+                    isCase: this.tempItem.isCase,
+                    price: price,
+                    eta: this.tempItem.eta
+                });
+                
+                // Reset select box
+                this.tempItem.id = 0;
+                this.tempItem.qty = 1;
+                this.tempItem.isCase = false;
+            },
 
-                // Core Functions
-                async downloadReceipt() {
-                    const element = document.getElementById('receipt-canvas');
-                    
-                    // temporarily adjust styles to ensure perfect capture
-                    element.style.transform = 'scale(1)';
-                    
-                    const canvas = await html2canvas(element, { 
-                        scale: 2, 
-                        useCORS: true,
-                        backgroundColor: "#ffffff"
-                    });
-                    
-                    const link = document.createElement('a');
-                    const safeName = this.customerName ? this.customerName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'slip';
-                    link.download = `cratedrop_order_${safeName}.png`;
-                    link.href = canvas.toDataURL("image/png");
-                    link.click();
-                },
+            removeItem(index) {
+                this.orderItems.splice(index, 1);
+            },
 
-                async confirmAndRedirect() {
-                    // Generate Text Summary
-                    let summary = `🛒 *PRE-ORDER SUMMARY: ${this.customerName.toUpperCase()}*\n`;
-                    this.orderItems.forEach(i => {
-                        summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n`;
-                    });
-                    summary += `\nTOTAL DP: ₱${this.totalDP.toLocaleString()}\n`;
-                    summary += `BAL: ₱${this.totalBalance.toLocaleString()}\n`;
-                    
-                    // Copy to clipboard
-                    try {
-                        await navigator.clipboard.writeText(summary);
-                    } catch (err) {
-                        console.log("Clipboard write failed, but proceeding to redirect.", err);
-                    }
+            get fullOrderTotal() {
+                return this.orderItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            },
+            get totalDP() {
+                return this.fullOrderTotal * 0.3;
+            },
+            get totalBalance() {
+                return this.fullOrderTotal - this.totalDP;
+            },
 
-                    // iOS Detection & Redirect
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            async downloadReceipt() {
+                const element = document.getElementById('receipt-canvas');
+                const canvas = await html2canvas(element, { scale: 2 });
+                const link = document.createElement('a');
+                link.download = `CrateDrop-Order-${this.customerName || 'Slip'}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            },
 
-                    if (isIOS) {
-                        window.location.href = "fb-messenger://user-thread/745474078647634";
-                    } else {
-                        window.open("https://m.me/cratedropcollective", "_blank");
-                    }
+            async confirmAndRedirect() {
+                let summary = "🛒 PRE ORDER SUMMARY\n-----------------\n";
+                this.orderItems.forEach(i => {
+                    summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n  ETA: ${i.eta}\n  DP (30%): ₱${(i.price * i.qty * 0.3).toLocaleString()}\n\n`;
+                });
+                summary += `TOTAL DOWNPAYMENT: ₱${this.totalDP.toLocaleString()}\n`;
+                summary += `REMAINING BALANCE: ₱${this.totalBalance.toLocaleString()}\n`;
+                summary += `STATUS: Payment Pending\n\n`;
+                summary += `Pre-Orders are subject to country allocation.`;
+
+                try {
+                    await navigator.clipboard.writeText(summary);
+                } catch (err) {
+                    console.error('Clipboard failed', err);
+                }
+
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+                if (isIOS) {
+                    window.location.href = "fb-messenger://user-thread/745474078647634";
+                } else {
+                    window.open("https://m.me/cratedropcollective", "_blank");
                 }
             }
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
