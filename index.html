@@ -34,6 +34,7 @@
                     </div>
                 </div>
 
+                <!-- Product Selection -->
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-3">
                     <h3 class="text-[10px] font-black uppercase text-blue-800">Add New Item</h3>
                     <div>
@@ -65,12 +66,15 @@
                     </div>
                 </div>
 
+                <!-- Items List -->
                 <div class="space-y-2 max-h-64 overflow-y-auto pr-2 text-slate-900">
                     <template x-for="(item, index) in orderItems" :key="index">
                         <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="flex-1">
                                 <p class="text-xs font-black uppercase" x-text="item.name"></p>
-                                <p class="text-[9px] text-gray-500 uppercase"><span x-text="item.qty"></span>x <span x-text="item.isCase ? 'Case' : 'Unit'"></span> | ₱<span x-text="item.price.toLocaleString()"></span></p>
+                                <p class="text-[9px] text-gray-500 uppercase">
+                                    <span x-text="item.qty"></span>x <span x-text="item.isCase ? 'Case' : 'Unit'"></span> | Price: ₱<span x-text="item.price.toLocaleString()"></span>
+                                </p>
                             </div>
                             <button @click="removeItem(index)" class="text-red-500 hover:text-red-700 px-2">
                                 <i class="fas fa-trash-alt text-xs"></i>
@@ -91,7 +95,7 @@
 
         <!-- Right Side: Receipt Canvas -->
         <div class="overflow-x-auto lg:overflow-visible">
-            <div id="receipt-canvas" class="bg-white shadow-2xl mx-auto border border-gray-100 flex flex-col" style="width: 800px; min-height: 800px;">
+            <div id="receipt-canvas" class="bg-white shadow-2xl mx-auto border border-gray-100 flex flex-col" style="width: 850px; min-height: 800px;">
                 <div class="p-10 border-b-2 border-gray-50">
                     <div class="flex items-center justify-center space-x-6">
                         <div class="flex flex-col items-center border-r-2 border-gray-100 pr-8">
@@ -110,40 +114,45 @@
                 </div>
 
                 <div class="mx-10 mt-8 flex-grow">
-                    <div class="grid grid-cols-12 gap-2 text-blue-800 font-black text-[11px] uppercase border-b-4 border-blue-800 pb-3">
+                    <!-- Updated Grid Header -->
+                    <div class="grid grid-cols-12 gap-2 text-blue-800 font-black text-[10px] uppercase border-b-4 border-blue-800 pb-3">
                         <div class="col-span-1">Qty.</div>
-                        <div class="col-span-2 text-center">Format</div>
-                        <div class="col-span-5">Product Name</div>
-                        <div class="col-span-2 text-right">Unit Price</div>
-                        <div class="col-span-2 text-right">Subtotal</div>
+                        <div class="col-span-1 text-center">Format</div>
+                        <div class="col-span-4">Product Name</div>
+                        <div class="col-span-2 text-right">Price/Unit</div>
+                        <div class="col-span-2 text-right text-blue-500">DP (30%)</div>
+                        <div class="col-span-2 text-right">Line Total</div>
                     </div>
 
+                    <!-- Updated Grid Body -->
                     <template x-for="(item, index) in orderItems" :key="index">
                         <div class="grid grid-cols-12 gap-2 text-slate-800 font-bold text-[11px] py-4 border-b border-gray-100 items-center">
                             <div class="col-span-1 font-black text-lg" x-text="item.qty"></div>
-                            <div class="col-span-2 uppercase text-[9px] text-center text-blue-600 font-black" x-text="item.isCase ? 'CASE' : 'UNIT'"></div>
-                            <div class="col-span-5 uppercase leading-tight">
+                            <div class="col-span-1 uppercase text-[8px] text-center text-blue-600 font-black" x-text="item.isCase ? 'CASE' : 'UNIT'"></div>
+                            <div class="col-span-4 uppercase leading-tight">
                                 <span x-text="item.name"></span>
-                                <div class="text-[8px] text-gray-400 mt-1" x-text="'ETA: ' + item.eta"></div>
+                                <div class="text-[8px] text-gray-400 mt-1 font-bold" x-text="'ETA: ' + item.eta"></div>
                             </div>
-                            <div class="col-span-2 text-right">₱<span x-text="item.price.toLocaleString()"></span></div>
+                            <div class="col-span-2 text-right text-gray-500">₱<span x-text="item.price.toLocaleString()"></span></div>
+                            <div class="col-span-2 text-right text-blue-600 font-black">₱<span x-text="Math.ceil(item.price * item.qty * 0.3).toLocaleString()"></span></div>
                             <div class="col-span-2 text-right font-black">₱<span x-text="(item.price * item.qty).toLocaleString()"></span></div>
                         </div>
                     </template>
                 </div>
 
+                <!-- Totals Section -->
                 <div class="mx-10 flex flex-col items-end space-y-4 mt-8">
-                    <div class="w-full max-w-[350px]">
+                    <div class="w-full max-w-[380px]">
                         <div class="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-2 px-2">
                             <span>Total Combined Order:</span>
                             <span>₱<span x-text="fullOrderTotal.toLocaleString()"></span></span>
                         </div>
-                        <div class="bg-blue-700 text-white text-center py-2 font-black text-[11px] uppercase tracking-widest">Total DP Due (30%)</div>
+                        <div class="bg-blue-700 text-white text-center py-2 font-black text-[11px] uppercase tracking-widest">Total Combined DP Paid (30%)</div>
                         <div class="text-center font-black text-4xl text-slate-900 py-3 border-x border-b border-gray-100 shadow-sm">
                             ₱<span x-text="totalDP.toLocaleString()"></span>
                         </div>
                     </div>
-                    <div class="w-full max-w-[350px] mb-8">
+                    <div class="w-full max-w-[380px] mb-8">
                         <div class="bg-slate-800 text-white text-center py-1.5 font-black text-[10px] uppercase tracking-widest">Combined Balance Remaining</div>
                         <div class="text-center font-black text-2xl text-slate-700 py-2 border-x border-b border-gray-100 shadow-sm">
                             ₱<span x-text="totalBalance.toLocaleString()"></span>
@@ -174,14 +183,10 @@
                 try {
                     const response = await fetch(tsvUrl);
                     const text = await response.text();
-                    
-                    // Filter out any blank rows
                     const rows = text.trim().split('\n').filter(row => row.trim() !== '').slice(1); 
                     
                     this.inventory = rows.map((row) => {
                         const cols = row.split('\t').map(c => c.trim());
-                        
-                        // Precise Column Order: id(0), name(1), type(2), set(3), price(4), unitsPerCase(5), eta(6)...
                         const rawPrice = cols[4] ? cols[4].replace(/[^0-9.]/g, '') : "0";
                         const unitPrice = parseFloat(rawPrice) || 0;
                         const unitsPerCase = parseInt(cols[5]) || 1;
@@ -195,12 +200,11 @@
                         };
                     });
                 } catch (err) {
-                    console.error("Critical: Failed to load TSV inventory.", err);
+                    console.error("Failed to load inventory:", err);
                 }
             },
 
             syncTempItem() {
-                // Ensure comparison happens as strings to avoid type-mismatch failure
                 const selected = this.inventory.find(i => String(i.id) === String(this.tempItem.id));
                 if (selected) {
                     this.tempItem.name = selected.name;
@@ -219,7 +223,6 @@
                     price: price,
                     eta: this.tempItem.eta
                 });
-                // Reset form inputs but keep name for safety
                 this.tempItem.id = '';
                 this.tempItem.qty = 1;
                 this.tempItem.isCase = false;
@@ -251,7 +254,8 @@
             async confirmAndRedirect() {
                 let summary = `🛒 *PRE-ORDER SUMMARY: ${this.customerName.toUpperCase()}*\n`;
                 this.orderItems.forEach(i => {
-                    summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n`;
+                    const lineDP = Math.ceil(i.price * i.qty * 0.3);
+                    summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n  Line DP: ₱${lineDP.toLocaleString()}\n`;
                 });
                 summary += `\nTOTAL DP: ₱${this.totalDP.toLocaleString()}\n`;
                 summary += `BAL: ₱${this.totalBalance.toLocaleString()}\n`;
