@@ -172,7 +172,6 @@
             orderDate: new Date().toLocaleDateString('en-PH'),
             tempItem: { id: 0, qty: 1, isCase: false, name: '', eta: '', unitPrice: 0, casePrice: 0 },
             
-            // Fetch directly from your TSV link
             async init() {
                 const tsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQBLjsB__nTteTD8pPY7wvfQEQUCqLstkfUb8lgfOV_NpVwraiUU07VxZrKyWsmVPE1vyLtv_6ED9Y/pub?gid=0&single=true&output=tsv";
                 
@@ -180,19 +179,24 @@
                     const response = await fetch(tsvUrl);
                     const text = await response.text();
                     
-                    // Skip header row and parse
                     const rows = text.trim().split('\n').slice(1); 
                     
-                    this.inventory = rows.map((row, index) => {
+                    this.inventory = rows.map((row) => {
                         const cols = row.split('\t');
+                        
+                        // MAP COLUMNS BASED ON YOUR SPECIFIED ORDER:
+                        // 0:id, 1:name, 2:type, 3:set, 4:price, 5:unitsPerCase, 6:eta...
+                        const unitPrice = parseFloat(cols[4] ? cols[4].replace(/,/g, '') : 0) || 0;
+                        const unitsPerCase = parseInt(cols[5]) || 1;
+
                         return {
-                            id: index + 1,
-                            name: cols[0] ? cols[0].trim() : 'Unknown Item',
-                            unitPrice: parseFloat(cols[1] ? cols[1].replace(/,/g, '') : 0) || 0,
-                            casePrice: parseFloat(cols[2] ? cols[2].replace(/,/g, '') : 0) || 0,
-                            eta: cols[3] ? cols[3].trim() : 'TBA'
+                            id: cols[0], // Using your sheet's actual ID column
+                            name: cols[1] ? cols[1].trim() : 'Unknown Item',
+                            unitPrice: unitPrice,
+                            casePrice: unitPrice * unitsPerCase, // Auto-calculate case price
+                            eta: cols[6] ? cols[6].trim() : 'TBA'
                         };
-                    }).filter(item => item.name !== 'Unknown Item'); // Ignore empty rows
+                    }).filter(item => item.name !== 'Unknown Item'); 
                 } catch (err) {
                     console.error("Failed to load inventory:", err);
                 }
@@ -217,8 +221,6 @@
                     price: price,
                     eta: this.tempItem.eta
                 });
-                
-                // Reset select box
                 this.tempItem.id = 0;
                 this.tempItem.qty = 1;
                 this.tempItem.isCase = false;
@@ -232,7 +234,7 @@
                 return this.orderItems.reduce((sum, i) => sum + (i.price * i.qty), 0);
             },
             get totalDP() {
-                return this.fullOrderTotal * 0.3;
+                return Math.ceil(this.fullOrderTotal * 0.3);
             },
             get totalBalance() {
                 return this.fullOrderTotal - this.totalDP;
@@ -250,13 +252,11 @@
             async confirmAndRedirect() {
                 let summary = "🛒 PRE ORDER SUMMARY\n-----------------\n";
                 this.orderItems.forEach(i => {
-                    summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n  ETA: ${i.eta}\n  DP (30%): ₱${(i.price * i.qty * 0.3).toLocaleString()}\n\n`;
+                    summary += `• ${i.qty}x ${i.name} (${i.isCase ? 'CASE' : 'UNIT'})\n  ETA: ${i.eta}\n  Price: ₱${i.price.toLocaleString()}\n\n`;
                 });
                 summary += `TOTAL DOWNPAYMENT: ₱${this.totalDP.toLocaleString()}\n`;
                 summary += `REMAINING BALANCE: ₱${this.totalBalance.toLocaleString()}\n`;
-                summary += `STATUS: Payment Pending\n\n`;
-                summary += `Pre-Orders are subject to country allocation.`;
-
+                
                 try {
                     await navigator.clipboard.writeText(summary);
                 } catch (err) {
